@@ -16,11 +16,10 @@ API Bridge Service(이하 ABS)는 Legacy API 서비스에서 Modern API 서비�
 - API 별 상세 모니터링 및 분석 데이터 제공
 
 ### 1.4 인프라 아키텍처
-```
-                         (sync)
-Client → API Gateway → ABS → Legacy Service
-                         ↓ (async)
-                      Modern Service
+```         
+Client → API Gateway → ABS → (sync) Legacy Service
+                        ↓
+            (async) Modern Service
 ```
 
 - **API Gateway**: 인증/인가, TLS 암호화, Rate Limiting 처리
@@ -39,14 +38,24 @@ Client → API Gateway → ABS → Legacy Service
 
 ### 2.1 API 라우팅 및 비교
 
-#### 2.1.1 요청 처리 흐름
-1. 클라이언트 요청 수신
-2. Legacy API로 요청 라우팅 (동기)
-3. Modern API로 동일 요청 전송 (비동기)
+#### 2.1.1 라우팅 전략
+- **포트 기반 라우팅**: Legacy와 Modern API는 동일한 호스트에서 서로 다른 포트로 서비스
+- **URL 변환 규칙**:
+  - Legacy API: `http://api-host:8080/api/v1/resource`
+  - Modern API: `http://api-host:9080/api/v1/resource`
+  - ABS는 요청 URL의 포트만 변경하여 라우팅
+- **경로 및 파라미터**: API 경로(path), 쿼리 파라미터, 헤더는 동일하게 전달
+- **HTTP Method**: 요청 메서드(GET, POST, PUT, DELETE 등)는 동일하게 유지
+- **포트 설정**: Legacy/Modern 서비스의 포트는 설정 파일에서 관리
+
+#### 2.1.2 요청 처리 흐름
+1. API Gateway로부터 요청 수신
+2. 요청 URL의 포트를 Legacy 포트로 변경하여 라우팅 (동기)
+3. 요청 URL의 포트를 Modern 포트로 변경하여 전송 (비동기)
 4. Legacy API 응답을 클라이언트에 즉시 반환
 5. 비동기로 두 응답 비교 및 결과 저장
 
-#### 2.1.2 응답 비교 로직
+#### 2.1.3 응답 비교 로직
 - **형식**: 모든 API 응답은 JSON 형식
 - **비교 범위**: JSON의 모든 필드 및 값 일치 여부 검증
 - **비교 규칙**:
@@ -57,7 +66,7 @@ Client → API Gateway → ABS → Legacy Service
   - 배열 요소 순서 일치 검증
   - 객체 내 필드 순서는 무시
 
-#### 2.1.3 비교 제외 필드
+#### 2.1.4 비교 제외 필드
 다음 필드들은 비교 시 제외:
 - `timestamp`, `requestId`, `traceId` 등 요청별 고유값
 - 응답 생성 시간 관련 필드
@@ -327,23 +336,44 @@ Client → API Gateway → ABS → Legacy Service
 
 ## 11. API 명세
 
+### 11.0 Context-Path 구분
+- **ABS 관리 API**: `/abs/*` - ABS 자체의 관리, 모니터링, Health Check용 API
+- **프록시 API**: `/abs/*` 이외의 모든 경로 - Legacy/Modern 서비스로 라우팅되는 비즈니스 API
+
+**라우팅 규칙**:
+- `/abs/*` 요청: ABS 내부에서 직접 처리 (프록시하지 않음)
+- 그 외 모든 요청: 포트 기반 라우팅을 통해 Legacy/Modern 서비스로 프록시
+
 ### 11.1 관리 API
-- `POST /api/v1/routes`: API 라우트 등록
-- `GET /api/v1/routes`: API 라우트 목록 조회
-- `PUT /api/v1/routes/{id}`: API 라우트 수정
-- `DELETE /api/v1/routes/{id}`: API 라우트 삭제
-- `GET /api/v1/routes/{id}/stats`: API별 통계 조회
-- `POST /api/v1/routes/{id}/switch`: API 전환 모드 변경
+ABS 자체의 설정 및 관리를 위한 API (Context-Path: `/abs`)
+
+- `POST /abs/api/v1/routes`: API 라우트 등록
+- `GET /abs/api/v1/routes`: API 라우트 목록 조회
+- `PUT /abs/api/v1/routes/{id}`: API 라우트 수정
+- `DELETE /abs/api/v1/routes/{id}`: API 라우트 삭제
+- `GET /abs/api/v1/routes/{id}/stats`: API별 통계 조회
+- `POST /abs/api/v1/routes/{id}/switch`: API 전환 모드 변경
 
 ### 11.2 모니터링 API
-- `GET /api/v1/metrics`: 전체 메트릭 조회
-- `GET /api/v1/metrics/{api_id}`: API별 메트릭 조회
-- `GET /api/v1/comparisons`: 비교 결과 조회
-- `GET /api/v1/comparisons/{id}`: 비교 결과 상세 조회
+ABS의 메트릭 및 비교 결과 조회 API (Context-Path: `/abs`)
+
+- `GET /abs/api/v1/metrics`: 전체 메트릭 조회
+- `GET /abs/api/v1/metrics/{api_id}`: API별 메트릭 조회
+- `GET /abs/api/v1/comparisons`: 비교 결과 조회
+- `GET /abs/api/v1/comparisons/{id}`: 비교 결과 상세 조회
 
 ### 11.3 Health Check
-- `GET /health/live`: Liveness probe
-- `GET /health/ready`: Readiness probe
+시스템 상태 확인 API (Context-Path: `/abs`)
+
+- `GET /abs/health/live`: Liveness probe
+- `GET /abs/health/ready`: Readiness probe
+
+### 11.4 프록시 API 예시
+Legacy/Modern 서비스로 라우팅되는 비즈니스 API 예시
+
+- `GET /api/v1/users` → Legacy: `http://api-host:8080/api/v1/users` / Modern: `http://api-host:9080/api/v1/users`
+- `POST /api/v1/orders` → Legacy: `http://api-host:8080/api/v1/orders` / Modern: `http://api-host:9080/api/v1/orders`
+- `GET /service/data` → Legacy: `http://api-host:8080/service/data` / Modern: `http://api-host:9080/service/data`
 
 ---
 
