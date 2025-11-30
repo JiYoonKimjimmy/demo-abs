@@ -208,6 +208,21 @@ Client → API Gateway → ABS → (sync) Legacy Service
 - **트랜잭션**: DB 트랜잭션 ACID 속성 준수
 - **재시도**: Modern API 호출 실패 시 최대 3회 재시도 (Exponential backoff)
 
+### 3.5 아키텍처
+
+ABS는 **헥사고날 아키텍처(Hexagonal Architecture)** 와 **클린 아키텍처(Clean Architecture)** 원칙을 적용하여 개발합니다.
+
+**선택 이유**:
+- **외부 의존성 분리**: Legacy/Modern API, OracleDB, Redis, RabbitMQ 등 다양한 외부 시스템과의 결합도 최소화
+- **테스트 용이성**: 비즈니스 로직을 독립적으로 테스트 가능
+- **확장성**: 향후 GraphQL, gRPC 지원 시 어댑터만 추가하여 확장 가능
+- **유지보수성**: 계층 분리를 통한 변경 영향 범위 최소화
+
+**핵심 원칙**:
+- Port(인터페이스)와 Adapter(구현체) 분리
+- 도메인 계층은 외부 계층에 의존하지 않음 (의존성 역전 원칙)
+- 계층별 명확한 책임 분리 (Domain → Application → Adapter → Infrastructure)
+
 ---
 
 ## 4. 오류 처리
