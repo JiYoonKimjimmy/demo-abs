@@ -42,61 +42,29 @@ API 라우트 정보를 관리하는 핵심 엔티티입니다.
 
 #### 불변식 (Invariants)
 
-```go
-// 1. Path는 반드시 '/'로 시작해야 함
-func (r *Route) Validate() error {
-    if !strings.HasPrefix(r.Path, "/") {
-        return ErrInvalidPath
-    }
-
-    // 2. SampleSize는 10 이상 1000 이하
-    if r.SampleSize < 10 || r.SampleSize > 1000 {
-        return ErrInvalidSampleSize
-    }
-
-    // 3. CanaryPercentage는 0 이상 100 이하
-    if r.CanaryPercentage < 0 || r.CanaryPercentage > 100 {
-        return ErrInvalidCanaryPercentage
-    }
-
-    // 4. Canary 모드일 때만 CanaryPercentage > 0
-    if r.OperationMode != OperationModeCanary && r.CanaryPercentage > 0 {
-        return ErrInvalidOperationMode
-    }
-
-    return nil
-}
-```
+1. **Path 검증**: Path는 반드시 '/'로 시작해야 함
+2. **SampleSize 범위**: 10 이상 1,000 이하
+3. **CanaryPercentage 범위**: 0 이상 100 이하
+4. **운영 모드 일관성**: Canary 모드일 때만 CanaryPercentage > 0 허용
 
 #### 도메인 메서드
 
-```go
-// UpdateMatchRate: 일치율 갱신
-func (r *Route) UpdateMatchRate(isMatch bool) {
-    r.TotalRequests++
-    if isMatch {
-        r.MatchedRequests++
-    }
+**`Validate() error`**
+- 불변식 검증
+- Path, SampleSize, CanaryPercentage, OperationMode 일관성 확인
 
-    if r.TotalRequests > 0 {
-        r.MatchRate = (float64(r.MatchedRequests) / float64(r.TotalRequests)) * 100.0
-    }
+**`UpdateMatchRate(isMatch bool)`**
+- 일치율 실시간 갱신
+- TotalRequests, MatchedRequests 증가
+- MatchRate 재계산: `(MatchedRequests / TotalRequests) * 100`
 
-    r.UpdatedAt = time.Now()
-}
+**`CanSwitchToModern() bool`**
+- Modern API 전환 가능 여부 판단
+- 조건: MatchRate = 100% AND TotalRequests ≥ SampleSize AND ErrorRate < 0.1%
 
-// CanSwitchToModern: Modern API로 전환 가능 여부
-func (r *Route) CanSwitchToModern() bool {
-    return r.MatchRate == 100.0 &&
-           r.TotalRequests >= int64(r.SampleSize) &&
-           r.ErrorRate < 0.1
-}
-
-// ShouldRollback: 롤백 필요 여부
-func (r *Route) ShouldRollback() bool {
-    return r.MatchRate < 99.9 || r.ErrorRate > 1.0
-}
-```
+**`ShouldRollback() bool`**
+- 롤백 필요 여부 판단
+- 조건: MatchRate < 99.9% OR ErrorRate > 1%
 
 ---
 
@@ -125,31 +93,23 @@ Legacy API와 Modern API의 응답 비교 결과를 저장하는 엔티티입니
 
 #### MismatchDetail 구조체
 
-```go
-type MismatchDetail struct {
-    FieldPath     string      // 필드 경로 (예: "user.address.city")
-    LegacyValue   interface{} // Legacy 값
-    ModernValue   interface{} // Modern 값
-    ExpectedType  string      // 기대 타입
-    ActualType    string      // 실제 타입
-}
-```
+| 필드명 | 타입 | 설명 |
+|--------|------|------|
+| `FieldPath` | `string` | 필드 경로 (예: "user.address.city") |
+| `LegacyValue` | `interface{}` | Legacy 값 |
+| `ModernValue` | `interface{}` | Modern 값 |
+| `ExpectedType` | `string` | 기대 타입 |
+| `ActualType` | `string` | 실제 타입 |
 
 #### 도메인 메서드
 
-```go
-// CalculateFieldMatchRate: 필드 일치율 계산
-func (c *Comparison) CalculateFieldMatchRate() {
-    if c.TotalFields > 0 {
-        c.FieldMatchRate = (float64(c.MatchedFields) / float64(c.TotalFields)) * 100.0
-    }
-}
+**`CalculateFieldMatchRate()`**
+- 필드 일치율 계산
+- 공식: `(MatchedFields / TotalFields) * 100`
 
-// IsTimeout: 비교 타임아웃 여부
-func (c *Comparison) IsTimeout() bool {
-    return c.ComparisonDuration > 10*time.Second
-}
-```
+**`IsTimeout() bool`**
+- 비교 타임아웃 여부 확인
+- 임계값: 10초
 
 ---
 
@@ -180,123 +140,48 @@ func (c *Comparison) IsTimeout() bool {
 
 #### 불변식 (Invariants)
 
-```go
-func (e *Experiment) Validate() error {
-    // 1. 트래픽 비율은 0-100 범위
-    if e.InitialPercentage < 0 || e.InitialPercentage > 100 {
-        return ErrInvalidPercentage
-    }
-
-    // 2. CurrentPercentage는 InitialPercentage 이상
-    if e.CurrentPercentage < e.InitialPercentage {
-        return ErrInvalidCurrentPercentage
-    }
-
-    // 3. 안정화 기간은 최소 1시간
-    if e.StabilizationPeriod < 3600 {
-        return ErrInvalidStabilizationPeriod
-    }
-
-    // 4. 완료 상태일 때 CurrentPercentage는 100
-    if e.Status == ExperimentStatusCompleted && e.CurrentPercentage != 100 {
-        return ErrIncompleteExperiment
-    }
-
-    return nil
-}
-```
+1. **트래픽 비율 범위**: InitialPercentage는 0-100 범위
+2. **비율 증가 순서**: CurrentPercentage ≥ InitialPercentage
+3. **안정화 기간 최소값**: StabilizationPeriod ≥ 3600초 (1시간)
+4. **완료 조건**: Status = completed일 때 CurrentPercentage = 100
 
 #### 도메인 메서드
 
-```go
-// Start: 실험 시작
-func (e *Experiment) Start() error {
-    if e.Status != ExperimentStatusPending {
-        return ErrInvalidExperimentStatus
-    }
+**`Validate() error`**
+- 불변식 검증
 
-    e.Status = ExperimentStatusRunning
-    e.CurrentPercentage = e.InitialPercentage
-    now := time.Now()
-    e.StartedAt = &now
-    e.UpdatedAt = now
+**`Start() error`**
+- 실험 시작
+- 전제 조건: Status = pending
+- 상태 전이: pending → running
+- CurrentPercentage를 InitialPercentage로 설정
 
-    return nil
-}
+**`Pause() error`**
+- 실험 일시 정지
+- 전제 조건: Status = running
+- 상태 전이: running → paused
 
-// Pause: 실험 일시 정지
-func (e *Experiment) Pause() error {
-    if e.Status != ExperimentStatusRunning {
-        return ErrCannotPauseExperiment
-    }
+**`Resume() error`**
+- 실험 재개
+- 전제 조건: Status = paused
+- 상태 전이: paused → running
 
-    e.Status = ExperimentStatusPaused
-    e.UpdatedAt = time.Now()
+**`Approve(approvedBy string, nextPercentage int) error`**
+- 다음 단계 승인
+- 전제 조건: Status = running, nextPercentage > CurrentPercentage
+- CurrentPercentage, CurrentStage 증가
+- LastApprovedBy, LastApprovedAt 기록
+- 100% 도달 시 Status = completed
 
-    return nil
-}
+**`Abort(reason string) error`**
+- 실험 중단
+- 전제 조건: Status ≠ completed, Status ≠ aborted
+- 상태 전이: * → aborted
+- AbortedReason 기록
 
-// Resume: 실험 재개
-func (e *Experiment) Resume() error {
-    if e.Status != ExperimentStatusPaused {
-        return ErrCannotResumeExperiment
-    }
-
-    e.Status = ExperimentStatusRunning
-    e.UpdatedAt = time.Now()
-
-    return nil
-}
-
-// Approve: 다음 단계 승인
-func (e *Experiment) Approve(approvedBy string, nextPercentage int) error {
-    if e.Status != ExperimentStatusRunning {
-        return ErrCannotApproveExperiment
-    }
-
-    if nextPercentage <= e.CurrentPercentage || nextPercentage > 100 {
-        return ErrInvalidNextPercentage
-    }
-
-    e.CurrentPercentage = nextPercentage
-    e.CurrentStage++
-    e.LastApprovedBy = approvedBy
-    now := time.Now()
-    e.LastApprovedAt = &now
-    e.UpdatedAt = now
-
-    // 100% 도달 시 완료
-    if e.CurrentPercentage == 100 {
-        e.Status = ExperimentStatusCompleted
-        e.CompletedAt = &now
-    }
-
-    return nil
-}
-
-// Abort: 실험 중단
-func (e *Experiment) Abort(reason string) error {
-    if e.Status == ExperimentStatusCompleted || e.Status == ExperimentStatusAborted {
-        return ErrCannotAbortExperiment
-    }
-
-    e.Status = ExperimentStatusAborted
-    e.AbortedReason = reason
-    now := time.Now()
-    e.CompletedAt = &now
-    e.UpdatedAt = now
-
-    return nil
-}
-
-// IsStabilizationPeriodElapsed: 안정화 기간 경과 여부
-func (e *Experiment) IsStabilizationPeriodElapsed() bool {
-    if e.LastApprovedAt == nil {
-        return time.Since(*e.StartedAt) >= time.Duration(e.StabilizationPeriod)*time.Second
-    }
-    return time.Since(*e.LastApprovedAt) >= time.Duration(e.StabilizationPeriod)*time.Second
-}
-```
+**`IsStabilizationPeriodElapsed() bool`**
+- 안정화 기간 경과 여부 확인
+- StartedAt 또는 LastApprovedAt 기준으로 계산
 
 ---
 
@@ -306,99 +191,66 @@ func (e *Experiment) IsStabilizationPeriodElapsed() bool {
 
 #### 필드 정의
 
-| 필드명 | 타입 | 설명 | 필수 |
-|--------|------|------|------|
-| `ID` | `string` | 단계 고유 식별자 (UUID) | ✓ |
-| `ExperimentID` | `string` | 실험 ID (FK) | ✓ |
-| `Stage` | `int` | 단계 번호 (1-6) | ✓ |
-| `TrafficPercentage` | `int` | 트래픽 비율 (%) | ✓ |
-| `MinRequests` | `int` | 최소 요청 수 | ✓ |
-| `TotalRequests` | `int64` | 처리된 총 요청 수 | 0 |
-| `MatchRate` | `float64` | 일치율 (%) | 0.0 |
-| `ErrorRate` | `float64` | 에러율 (%) | 0.0 |
-| `LegacyAvgResponseTime` | `int64` | Legacy 평균 응답 시간 (ms) | 0 |
-| `ModernAvgResponseTime` | `int64` | Modern 평균 응답 시간 (ms) | 0 |
-| `ApprovedBy` | `string` | 승인자 | - |
-| `ApprovedAt` | `*time.Time` | 승인 시간 | nil |
-| `StartedAt` | `time.Time` | 단계 시작 시간 | ✓ |
-| `CompletedAt` | `*time.Time` | 단계 완료 시간 | nil |
-| `RollbackReason` | `string` | 롤백 사유 | - |
-| `IsRollback` | `bool` | 롤백 여부 | false |
+| 필드명 | 타입 | 설명 | 필수 | 기본값 |
+|--------|------|------|------|--------|
+| `ID` | `string` | 단계 고유 식별자 (UUID) | ✓ | - |
+| `ExperimentID` | `string` | 실험 ID (FK) | ✓ | - |
+| `Stage` | `int` | 단계 번호 (1-6) | ✓ | - |
+| `TrafficPercentage` | `int` | 트래픽 비율 (%) | ✓ | - |
+| `MinRequests` | `int` | 최소 요청 수 | ✓ | - |
+| `TotalRequests` | `int64` | 처리된 총 요청 수 | | 0 |
+| `MatchRate` | `float64` | 일치율 (%) | | 0.0 |
+| `ErrorRate` | `float64` | 에러율 (%) | | 0.0 |
+| `LegacyAvgResponseTime` | `int64` | Legacy 평균 응답 시간 (ms) | | 0 |
+| `ModernAvgResponseTime` | `int64` | Modern 평균 응답 시간 (ms) | | 0 |
+| `ApprovedBy` | `string` | 승인자 | | - |
+| `ApprovedAt` | `*time.Time` | 승인 시간 | | nil |
+| `StartedAt` | `time.Time` | 단계 시작 시간 | ✓ | now() |
+| `CompletedAt` | `*time.Time` | 단계 완료 시간 | | nil |
+| `RollbackReason` | `string` | 롤백 사유 | | - |
+| `IsRollback` | `bool` | 롤백 여부 | | false |
+
+#### 단계별 최소 요청 수
+
+| 단계 | 트래픽 비율 | 최소 요청 수 |
+|------|-------------|--------------|
+| 1 | 1% → 5% | 100 |
+| 2 | 5% → 10% | 500 |
+| 3 | 10% → 25% | 1,000 |
+| 4 | 25% → 50% | 5,000 |
+| 5 | 50% → 100% | 10,000 |
 
 #### 도메인 메서드
 
-```go
-// CanProceedToNextStage: 다음 단계 진행 가능 여부
-func (s *ExperimentStage) CanProceedToNextStage(stabilizationPeriod int) bool {
-    // 1. 안정화 기간 경과
-    elapsed := time.Since(s.StartedAt) >= time.Duration(stabilizationPeriod)*time.Second
+**`CanProceedToNextStage(stabilizationPeriod int) bool`**
+- 다음 단계 진행 가능 여부 판단
+- 조건 (모두 충족):
+  1. 안정화 기간 경과
+  2. TotalRequests ≥ MinRequests
+  3. MatchRate ≥ 99.9%
+  4. ErrorRate < 0.1%
+  5. ModernAvgResponseTime ≤ LegacyAvgResponseTime × 1.2
 
-    // 2. 최소 요청 수 충족
-    minRequestsMet := s.TotalRequests >= int64(s.MinRequests)
+**`ShouldRollback() (bool, string)`**
+- 즉시 롤백 필요 여부 판단 (Critical)
+- 조건 (하나라도 충족):
+  1. ErrorRate > 1%
+  2. ModernAvgResponseTime > LegacyAvgResponseTime × 2.0
 
-    // 3. 일치율 99.9% 이상
-    matchRateOK := s.MatchRate >= 99.9
+**`ShouldWarnRollback() (bool, string)`**
+- 경고 후 롤백 필요 여부 판단 (Warning, 5분 지속 시)
+- 조건 (하나라도 충족):
+  1. MatchRate < 99.5%
+  2. ErrorRate > 0.5%
+  3. ModernAvgResponseTime > LegacyAvgResponseTime × 1.5
 
-    // 4. 에러율 0.1% 미만
-    errorRateOK := s.ErrorRate < 0.1
+**`Complete(approvedBy string)`**
+- 단계 완료 처리
+- ApprovedBy, ApprovedAt, CompletedAt 설정
 
-    // 5. 응답 시간 Legacy × 1.2 이하
-    responseTimeOK := s.ModernAvgResponseTime <= s.LegacyAvgResponseTime*12/10
-
-    return elapsed && minRequestsMet && matchRateOK && errorRateOK && responseTimeOK
-}
-
-// ShouldRollback: 롤백 필요 여부 (즉시 롤백)
-func (s *ExperimentStage) ShouldRollback() (bool, string) {
-    // 에러율 > 1%
-    if s.ErrorRate > 1.0 {
-        return true, "Modern API 에러율 1% 초과"
-    }
-
-    // 응답 시간 > Legacy × 2.0
-    if s.ModernAvgResponseTime > s.LegacyAvgResponseTime*2 {
-        return true, "Modern API 응답 시간이 Legacy의 2배 초과"
-    }
-
-    return false, ""
-}
-
-// ShouldWarnRollback: 경고 후 롤백 (조건 지속 시)
-func (s *ExperimentStage) ShouldWarnRollback() (bool, string) {
-    // 일치율 < 99.5%
-    if s.MatchRate < 99.5 {
-        return true, "일치율 99.5% 미만"
-    }
-
-    // 에러율 > 0.5%
-    if s.ErrorRate > 0.5 {
-        return true, "에러율 0.5% 초과"
-    }
-
-    // 응답 시간 > Legacy × 1.5
-    if s.ModernAvgResponseTime > s.LegacyAvgResponseTime*15/10 {
-        return true, "응답 시간이 Legacy의 1.5배 초과"
-    }
-
-    return false, ""
-}
-
-// Complete: 단계 완료
-func (s *ExperimentStage) Complete(approvedBy string) {
-    s.ApprovedBy = approvedBy
-    now := time.Now()
-    s.ApprovedAt = &now
-    s.CompletedAt = &now
-}
-
-// Rollback: 롤백 기록
-func (s *ExperimentStage) Rollback(reason string) {
-    s.IsRollback = true
-    s.RollbackReason = reason
-    now := time.Now()
-    s.CompletedAt = &now
-}
-```
+**`Rollback(reason string)`**
+- 롤백 기록
+- IsRollback = true, RollbackReason 설정
 
 ---
 
@@ -408,24 +260,16 @@ func (s *ExperimentStage) Rollback(reason string) {
 
 API 요청 정보를 나타내는 Value Object입니다.
 
-```go
-type APIRequest struct {
-    Method      string            // HTTP 메서드
-    Path        string            // 요청 경로
-    QueryParams map[string]string // 쿼리 파라미터
-    Headers     map[string]string // 헤더
-    Body        []byte            // 요청 본문 (JSON)
-    Timestamp   time.Time         // 요청 시간
-}
+| 필드명 | 타입 | 설명 |
+|--------|------|------|
+| `Method` | `string` | HTTP 메서드 |
+| `Path` | `string` | 요청 경로 |
+| `QueryParams` | `map[string]string` | 쿼리 파라미터 |
+| `Headers` | `map[string]string` | 헤더 |
+| `Body` | `[]byte` | 요청 본문 (JSON) |
+| `Timestamp` | `time.Time` | 요청 시간 |
 
-// Equals: 동등성 비교
-func (r APIRequest) Equals(other APIRequest) bool {
-    return r.Method == other.Method &&
-           r.Path == other.Path &&
-           mapsEqual(r.QueryParams, other.QueryParams) &&
-           bytes.Equal(r.Body, other.Body)
-}
-```
+**메서드**: `Equals(other APIRequest) bool` - 동등성 비교
 
 ---
 
@@ -433,26 +277,18 @@ func (r APIRequest) Equals(other APIRequest) bool {
 
 API 응답 정보를 나타내는 Value Object입니다.
 
-```go
-type APIResponse struct {
-    StatusCode   int               // HTTP 상태 코드
-    Headers      map[string]string // 응답 헤더
-    Body         []byte            // 응답 본문 (JSON)
-    ResponseTime int64             // 응답 시간 (ms)
-    Error        string            // 에러 메시지 (실패 시)
-    Timestamp    time.Time         // 응답 시간
-}
+| 필드명 | 타입 | 설명 |
+|--------|------|------|
+| `StatusCode` | `int` | HTTP 상태 코드 |
+| `Headers` | `map[string]string` | 응답 헤더 |
+| `Body` | `[]byte` | 응답 본문 (JSON) |
+| `ResponseTime` | `int64` | 응답 시간 (ms) |
+| `Error` | `string` | 에러 메시지 (실패 시) |
+| `Timestamp` | `time.Time` | 응답 시간 |
 
-// IsSuccess: 성공 응답 여부
-func (r APIResponse) IsSuccess() bool {
-    return r.StatusCode >= 200 && r.StatusCode < 300 && r.Error == ""
-}
-
-// IsTimeout: 타임아웃 여부
-func (r APIResponse) IsTimeout() bool {
-    return r.ResponseTime >= 30000 // 30초
-}
-```
+**메서드**:
+- `IsSuccess() bool` - 성공 응답 여부 (2xx, Error 없음)
+- `IsTimeout() bool` - 타임아웃 여부 (≥ 30초)
 
 ---
 
@@ -460,28 +296,16 @@ func (r APIResponse) IsTimeout() bool {
 
 일치율을 나타내는 Value Object입니다.
 
-```go
-type MatchRate struct {
-    Value      float64 // 일치율 (0.0-100.0)
-    SampleSize int     // 표본 크기
-    UpdatedAt  time.Time
-}
+| 필드명 | 타입 | 설명 |
+|--------|------|------|
+| `Value` | `float64` | 일치율 (0.0-100.0) |
+| `SampleSize` | `int` | 표본 크기 |
+| `UpdatedAt` | `time.Time` | 갱신 시간 |
 
-// IsPerfect: 완벽한 일치율 (100%)
-func (m MatchRate) IsPerfect() bool {
-    return m.Value == 100.0
-}
-
-// IsAcceptable: 허용 가능한 일치율 (≥ 99.9%)
-func (m MatchRate) IsAcceptable() bool {
-    return m.Value >= 99.9
-}
-
-// HasEnoughSamples: 충분한 표본 수 확보 여부
-func (m MatchRate) HasEnoughSamples() bool {
-    return m.SampleSize >= 10
-}
-```
+**메서드**:
+- `IsPerfect() bool` - 완벽한 일치율 (100%)
+- `IsAcceptable() bool` - 허용 가능한 일치율 (≥ 99.9%)
+- `HasEnoughSamples() bool` - 충분한 표본 수 (≥ 10)
 
 ---
 
@@ -489,119 +313,68 @@ func (m MatchRate) HasEnoughSamples() bool {
 
 트래픽 비율을 나타내는 Value Object입니다.
 
-```go
-type TrafficPercentage struct {
-    Value int // 0-100
-}
+| 필드명 | 타입 | 설명 |
+|--------|------|------|
+| `Value` | `int` | 트래픽 비율 (0-100) |
 
-// NewTrafficPercentage: TrafficPercentage 생성
-func NewTrafficPercentage(value int) (TrafficPercentage, error) {
-    if value < 0 || value > 100 {
-        return TrafficPercentage{}, ErrInvalidPercentage
-    }
-    return TrafficPercentage{Value: value}, nil
-}
+**팩토리 메서드**: `NewTrafficPercentage(value int) (TrafficPercentage, error)`
+- 0-100 범위 검증
 
-// IsZero: 0%
-func (t TrafficPercentage) IsZero() bool {
-    return t.Value == 0
-}
-
-// IsFull: 100%
-func (t TrafficPercentage) IsFull() bool {
-    return t.Value == 100
-}
-
-// NextStage: 다음 단계 비율 반환
-func (t TrafficPercentage) NextStage() (TrafficPercentage, error) {
-    stages := []int{1, 5, 10, 25, 50, 100}
-
-    for _, stage := range stages {
-        if t.Value < stage {
-            return NewTrafficPercentage(stage)
-        }
-    }
-
-    return TrafficPercentage{}, ErrAlreadyFullTraffic
-}
-```
+**메서드**:
+- `IsZero() bool` - 0% 여부
+- `IsFull() bool` - 100% 여부
+- `NextStage() (TrafficPercentage, error)` - 다음 단계 비율 반환 (1 → 5 → 10 → 25 → 50 → 100)
 
 ---
 
-### 2.5 OperationMode (Enum)
+## 3. Enum
+
+### 3.1 OperationMode
 
 운영 모드를 나타내는 열거형입니다.
 
-```go
-type OperationMode string
+| 값 | 설명 |
+|----|------|
+| `validation` | 검증 모드 (Legacy 응답 반환, Modern 비교만) |
+| `canary` | Canary 모드 (N% Modern 반환) |
+| `switched` | 전환 모드 (100% Modern 반환) |
 
-const (
-    OperationModeValidation OperationMode = "validation" // 검증 모드 (Legacy 응답 반환)
-    OperationModeCanary     OperationMode = "canary"     // Canary 모드 (N% Modern 반환)
-    OperationModeSwitched   OperationMode = "switched"   // 전환 모드 (100% Modern 반환)
-)
-
-// String: 문자열 변환
-func (m OperationMode) String() string {
-    return string(m)
-}
-
-// IsValid: 유효한 모드 여부
-func (m OperationMode) IsValid() bool {
-    switch m {
-    case OperationModeValidation, OperationModeCanary, OperationModeSwitched:
-        return true
-    }
-    return false
-}
-```
+**메서드**:
+- `String() string` - 문자열 변환
+- `IsValid() bool` - 유효한 모드 여부
 
 ---
 
-### 2.6 ExperimentStatus (Enum)
+### 3.2 ExperimentStatus
 
 실험 상태를 나타내는 열거형입니다.
 
-```go
-type ExperimentStatus string
+| 값 | 설명 |
+|----|------|
+| `pending` | 대기 중 |
+| `running` | 진행 중 |
+| `paused` | 일시 정지 |
+| `completed` | 완료 |
+| `aborted` | 중단 |
 
-const (
-    ExperimentStatusPending   ExperimentStatus = "pending"   // 대기 중
-    ExperimentStatusRunning   ExperimentStatus = "running"   // 진행 중
-    ExperimentStatusPaused    ExperimentStatus = "paused"    // 일시 정지
-    ExperimentStatusCompleted ExperimentStatus = "completed" // 완료
-    ExperimentStatusAborted   ExperimentStatus = "aborted"   // 중단
-)
+**상태 전이 규칙**:
+- `pending` → `running`
+- `running` → `paused`, `completed`, `aborted`
+- `paused` → `running`, `aborted`
+- `completed`, `aborted` → (종료 상태, 전이 불가)
 
-// CanTransitionTo: 상태 전이 가능 여부
-func (s ExperimentStatus) CanTransitionTo(next ExperimentStatus) bool {
-    transitions := map[ExperimentStatus][]ExperimentStatus{
-        ExperimentStatusPending:   {ExperimentStatusRunning},
-        ExperimentStatusRunning:   {ExperimentStatusPaused, ExperimentStatusCompleted, ExperimentStatusAborted},
-        ExperimentStatusPaused:    {ExperimentStatusRunning, ExperimentStatusAborted},
-        ExperimentStatusCompleted: {},
-        ExperimentStatusAborted:   {},
-    }
-
-    allowed := transitions[s]
-    for _, a := range allowed {
-        if a == next {
-            return true
-        }
-    }
-    return false
-}
-```
+**메서드**: `CanTransitionTo(next ExperimentStatus) bool` - 상태 전이 가능 여부
 
 ---
 
-## 3. 도메인 규칙 요약
+## 4. 도메인 규칙 요약
 
 ### Route 도메인 규칙
 
-1. **일치율 계산**: 요청 처리 시마다 실시간 갱신
-2. **전환 조건**: 일치율 100% + 표본 수 충족 + 에러율 < 0.1%
-3. **롤백 조건**: 일치율 < 99.9% 또는 에러율 > 1%
+1. **일치율 계산**: 요청 처리 시마다 실시간 갱신 (`(MatchedRequests / TotalRequests) * 100`)
+2. **전환 조건**: MatchRate = 100% AND TotalRequests ≥ SampleSize AND ErrorRate < 0.1%
+3. **롤백 조건**: MatchRate < 99.9% OR ErrorRate > 1%
+4. **운영 모드 일관성**: Canary 모드일 때만 CanaryPercentage > 0
 
 ### Experiment 도메인 규칙
 
@@ -611,26 +384,31 @@ func (s ExperimentStatus) CanTransitionTo(next ExperimentStatus) bool {
    - running/paused → aborted
 2. **단계별 진행**: 1% → 5% → 10% → 25% → 50% → 100%
 3. **승인 필수**: 각 단계 진행 시 관리자 승인 필요
+4. **안정화 기간**: 최소 1시간 (3600초)
 
 ### ExperimentStage 도메인 규칙
 
-1. **진행 조건**:
-   - 안정화 기간 경과
-   - 최소 요청 수 충족
-   - 일치율 ≥ 99.9%
-   - 에러율 < 0.1%
-   - 응답 시간 ≤ Legacy × 1.2
-2. **즉시 롤백**:
-   - 에러율 > 1%
-   - 응답 시간 > Legacy × 2.0
-3. **경고 후 롤백** (5분 지속 시):
-   - 일치율 < 99.5%
-   - 에러율 > 0.5%
-   - 응답 시간 > Legacy × 1.5
+#### 진행 조건 (모두 충족)
+1. 안정화 기간 경과
+2. 최소 요청 수 충족 (단계별 상이)
+3. 일치율 ≥ 99.9%
+4. 에러율 < 0.1%
+5. 응답 시간 ≤ Legacy × 1.2
+
+#### 롤백 조건
+
+**즉시 롤백 (Critical)**:
+- 에러율 > 1%
+- 응답 시간 > Legacy × 2.0
+
+**경고 후 롤백 (Warning, 5분 지속 시)**:
+- 일치율 < 99.5%
+- 에러율 > 0.5%
+- 응답 시간 > Legacy × 1.5
 
 ---
 
-## 4. Entity 관계 다이어그램
+## 5. Entity 관계 다이어그램
 
 ```
 ┌──────────────┐
@@ -643,9 +421,7 @@ func (s ExperimentStatus) CanTransitionTo(next ExperimentStatus) bool {
 └──────────────┘        │
        ▲                │
        │                │
-       │                │
        │ RouteID        │ RouteID
-       │                │
        │                │
 ┌──────────────┐   ┌────────────────┐
 │  Comparison  │   │  Experiment    │
@@ -656,7 +432,6 @@ func (s ExperimentStatus) CanTransitionTo(next ExperimentStatus) bool {
 │ - Modern...  │   │                │        │
 └──────────────┘   └────────────────┘        │
                           ▲                  │
-                          │                  │
                           │ ExperimentID     │ ExperimentID
                           │                  │
                    ┌──────────────────┐      │
@@ -669,28 +444,28 @@ func (s ExperimentStatus) CanTransitionTo(next ExperimentStatus) bool {
                    └──────────────────┘
 ```
 
+**관계 설명**:
+- Route : Comparison = 1 : N
+- Route : Experiment = 1 : N
+- Experiment : ExperimentStage = 1 : N
+
 ---
 
-## 5. 참고 사항
+## 6. 참고 사항
 
-### 5.1 UUID 생성
+### 6.1 UUID 생성
 
 모든 Entity의 ID는 UUID v4를 사용합니다.
+- 라이브러리: `github.com/google/uuid`
 
-```go
-import "github.com/google/uuid"
-
-id := uuid.New().String()
-```
-
-### 5.2 타임스탬프
+### 6.2 타임스탬프
 
 - `CreatedAt`, `UpdatedAt`: UTC 시간 사용
 - DB 저장 시 `time.Time` → `timestamp with time zone`
 
-### 5.3 JSON 직렬화
+### 6.3 JSON 직렬화
 
-- APIRequest.Body, APIResponse.Body는 `[]byte`로 저장
+- `APIRequest.Body`, `APIResponse.Body`: `[]byte`로 저장
 - DB 저장 시 CLOB 또는 TEXT 타입 사용
 
 ---

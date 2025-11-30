@@ -23,47 +23,40 @@
 
 API 라우트 정보를 영속화하는 Repository입니다.
 
-```go
-package port
+#### 인터페이스
 
-import (
-    "context"
-    "demo-abs/internal/domain/model"
-)
+**`Create(ctx context.Context, route *Route) error`**
+- 라우트 생성
 
-type RouteRepository interface {
-    // Create: 라우트 생성
-    Create(ctx context.Context, route *model.Route) error
+**`FindByID(ctx context.Context, id string) (*Route, error)`**
+- ID로 라우트 조회
 
-    // FindByID: ID로 라우트 조회
-    FindByID(ctx context.Context, id string) (*model.Route, error)
+**`FindByPathAndMethod(ctx context.Context, path, method string) (*Route, error)`**
+- 경로 및 메서드로 라우트 조회
 
-    // FindByPathAndMethod: 경로 및 메서드로 라우트 조회
-    FindByPathAndMethod(ctx context.Context, path, method string) (*model.Route, error)
+**`FindAll(ctx context.Context, filter RouteFilter) ([]*Route, error)`**
+- 모든 라우트 조회 (필터, 페이지네이션)
 
-    // FindAll: 모든 라우트 조회
-    FindAll(ctx context.Context, filter RouteFilter) ([]*model.Route, error)
+**`Update(ctx context.Context, route *Route) error`**
+- 라우트 수정
 
-    // Update: 라우트 수정
-    Update(ctx context.Context, route *model.Route) error
+**`Delete(ctx context.Context, id string) error`**
+- 라우트 삭제
 
-    // Delete: 라우트 삭제
-    Delete(ctx context.Context, id string) error
+**`UpdateMatchRate(ctx context.Context, id string, matchRate float64, totalRequests, matchedRequests int64) error`**
+- 일치율 갱신
 
-    // UpdateMatchRate: 일치율 갱신
-    UpdateMatchRate(ctx context.Context, id string, matchRate float64, totalRequests, matchedRequests int64) error
+**`UpdateOperationMode(ctx context.Context, id string, mode OperationMode, canaryPercentage int) error`**
+- 운영 모드 변경
 
-    // UpdateOperationMode: 운영 모드 변경
-    UpdateOperationMode(ctx context.Context, id string, mode model.OperationMode, canaryPercentage int) error
-}
+#### RouteFilter
 
-type RouteFilter struct {
-    IsActive       *bool
-    OperationMode  *model.OperationMode
-    Limit          int
-    Offset         int
-}
-```
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `IsActive` | `*bool` | 활성화 여부 필터 |
+| `OperationMode` | `*OperationMode` | 운영 모드 필터 |
+| `Limit` | `int` | 페이지 크기 |
+| `Offset` | `int` | 페이지 오프셋 |
 
 ---
 
@@ -71,35 +64,35 @@ type RouteFilter struct {
 
 비교 결과를 영속화하는 Repository입니다.
 
-```go
-type ComparisonRepository interface {
-    // Create: 비교 결과 생성
-    Create(ctx context.Context, comparison *model.Comparison) error
+#### 인터페이스
 
-    // FindByID: ID로 비교 결과 조회
-    FindByID(ctx context.Context, id string) (*model.Comparison, error)
+**`Create(ctx context.Context, comparison *Comparison) error`**
+- 비교 결과 생성
 
-    // FindByRouteID: 라우트 ID로 비교 결과 목록 조회
-    FindByRouteID(ctx context.Context, routeID string, filter ComparisonFilter) ([]*model.Comparison, error)
+**`FindByID(ctx context.Context, id string) (*Comparison, error)`**
+- ID로 비교 결과 조회
 
-    // FindMismatches: 불일치 결과만 조회
-    FindMismatches(ctx context.Context, routeID string, limit int) ([]*model.Comparison, error)
+**`FindByRouteID(ctx context.Context, routeID string, filter ComparisonFilter) ([]*Comparison, error)`**
+- 라우트 ID로 비교 결과 목록 조회
 
-    // CountByRouteID: 라우트별 비교 결과 수 집계
-    CountByRouteID(ctx context.Context, routeID string) (total, matched int64, err error)
+**`FindMismatches(ctx context.Context, routeID string, limit int) ([]*Comparison, error)`**
+- 불일치 결과만 조회
 
-    // DeleteOld: 오래된 비교 결과 삭제 (30일 이상)
-    DeleteOld(ctx context.Context, retentionDays int) (int64, error)
-}
+**`CountByRouteID(ctx context.Context, routeID string) (total, matched int64, err error)`**
+- 라우트별 비교 결과 수 집계
 
-type ComparisonFilter struct {
-    IsMatch    *bool
-    StartTime  *time.Time
-    EndTime    *time.Time
-    Limit      int
-    Offset     int
-}
-```
+**`DeleteOld(ctx context.Context, retentionDays int) (int64, error)`**
+- 오래된 비교 결과 삭제 (기본: 30일)
+
+#### ComparisonFilter
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `IsMatch` | `*bool` | 일치 여부 필터 |
+| `StartTime` | `*time.Time` | 시작 시간 |
+| `EndTime` | `*time.Time` | 종료 시간 |
+| `Limit` | `int` | 페이지 크기 |
+| `Offset` | `int` | 페이지 오프셋 |
 
 ---
 
@@ -107,39 +100,39 @@ type ComparisonFilter struct {
 
 실험 정보를 영속화하는 Repository입니다.
 
-```go
-type ExperimentRepository interface {
-    // Create: 실험 생성
-    Create(ctx context.Context, experiment *model.Experiment) error
+#### 인터페이스
 
-    // FindByID: ID로 실험 조회
-    FindByID(ctx context.Context, id string) (*model.Experiment, error)
+**`Create(ctx context.Context, experiment *Experiment) error`**
+- 실험 생성
 
-    // FindByRouteID: 라우트 ID로 실험 조회
-    FindByRouteID(ctx context.Context, routeID string) ([]*model.Experiment, error)
+**`FindByID(ctx context.Context, id string) (*Experiment, error)`**
+- ID로 실험 조회
 
-    // FindCurrentByRouteID: 라우트의 진행 중인 실험 조회
-    FindCurrentByRouteID(ctx context.Context, routeID string) (*model.Experiment, error)
+**`FindByRouteID(ctx context.Context, routeID string) ([]*Experiment, error)`**
+- 라우트 ID로 실험 목록 조회
 
-    // Update: 실험 수정
-    Update(ctx context.Context, experiment *model.Experiment) error
+**`FindCurrentByRouteID(ctx context.Context, routeID string) (*Experiment, error)`**
+- 라우트의 진행 중인 실험 조회 (Status = running or paused)
 
-    // UpdateStatus: 실험 상태 변경
-    UpdateStatus(ctx context.Context, id string, status model.ExperimentStatus) error
+**`Update(ctx context.Context, experiment *Experiment) error`**
+- 실험 수정
 
-    // FindAll: 모든 실험 조회
-    FindAll(ctx context.Context, filter ExperimentFilter) ([]*model.Experiment, error)
-}
+**`UpdateStatus(ctx context.Context, id string, status ExperimentStatus) error`**
+- 실험 상태 변경
 
-type ExperimentFilter struct {
-    RouteID    *string
-    Status     *model.ExperimentStatus
-    StartTime  *time.Time
-    EndTime    *time.Time
-    Limit      int
-    Offset     int
-}
-```
+**`FindAll(ctx context.Context, filter ExperimentFilter) ([]*Experiment, error)`**
+- 모든 실험 조회 (필터, 페이지네이션)
+
+#### ExperimentFilter
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `RouteID` | `*string` | 라우트 ID 필터 |
+| `Status` | `*ExperimentStatus` | 상태 필터 |
+| `StartTime` | `*time.Time` | 시작 시간 |
+| `EndTime` | `*time.Time` | 종료 시간 |
+| `Limit` | `int` | 페이지 크기 |
+| `Offset` | `int` | 페이지 오프셋 |
 
 ---
 
@@ -147,35 +140,35 @@ type ExperimentFilter struct {
 
 실험 단계별 이력을 영속화하는 Repository입니다.
 
-```go
-type ExperimentStageRepository interface {
-    // Create: 실험 단계 생성
-    Create(ctx context.Context, stage *model.ExperimentStage) error
+#### 인터페이스
 
-    // FindByID: ID로 단계 조회
-    FindByID(ctx context.Context, id string) (*model.ExperimentStage, error)
+**`Create(ctx context.Context, stage *ExperimentStage) error`**
+- 실험 단계 생성
 
-    // FindByExperimentID: 실험 ID로 모든 단계 조회
-    FindByExperimentID(ctx context.Context, experimentID string) ([]*model.ExperimentStage, error)
+**`FindByID(ctx context.Context, id string) (*ExperimentStage, error)`**
+- ID로 단계 조회
 
-    // FindCurrentStage: 실험의 현재 진행 중인 단계 조회
-    FindCurrentStage(ctx context.Context, experimentID string) (*model.ExperimentStage, error)
+**`FindByExperimentID(ctx context.Context, experimentID string) ([]*ExperimentStage, error)`**
+- 실험 ID로 모든 단계 조회
 
-    // Update: 단계 수정
-    Update(ctx context.Context, stage *model.ExperimentStage) error
+**`FindCurrentStage(ctx context.Context, experimentID string) (*ExperimentStage, error)`**
+- 실험의 현재 진행 중인 단계 조회 (CompletedAt = nil)
 
-    // UpdateMetrics: 단계의 메트릭 갱신
-    UpdateMetrics(ctx context.Context, id string, metrics StageMetrics) error
-}
+**`Update(ctx context.Context, stage *ExperimentStage) error`**
+- 단계 수정
 
-type StageMetrics struct {
-    TotalRequests          int64
-    MatchRate              float64
-    ErrorRate              float64
-    LegacyAvgResponseTime  int64
-    ModernAvgResponseTime  int64
-}
-```
+**`UpdateMetrics(ctx context.Context, id string, metrics StageMetrics) error`**
+- 단계의 메트릭 갱신
+
+#### StageMetrics
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `TotalRequests` | `int64` | 총 요청 수 |
+| `MatchRate` | `float64` | 일치율 (%) |
+| `ErrorRate` | `float64` | 에러율 (%) |
+| `LegacyAvgResponseTime` | `int64` | Legacy 평균 응답 시간 (ms) |
+| `ModernAvgResponseTime` | `int64` | Modern 평균 응답 시간 (ms) |
 
 ---
 
@@ -185,66 +178,59 @@ type StageMetrics struct {
 
 Redis 캐시를 추상화한 인터페이스입니다.
 
-```go
-type CachePort interface {
-    // Set: 캐시 저장
-    Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error
+#### 기본 연산
 
-    // Get: 캐시 조회
-    Get(ctx context.Context, key string) (interface{}, error)
+**`Set(ctx context.Context, key string, value interface{}, ttl time.Duration) error`**
+- 캐시 저장
 
-    // GetString: 문자열 캐시 조회
-    GetString(ctx context.Context, key string) (string, error)
+**`Get(ctx context.Context, key string) (interface{}, error)`**
+- 캐시 조회
 
-    // Delete: 캐시 삭제
-    Delete(ctx context.Context, key string) error
+**`GetString(ctx context.Context, key string) (string, error)`**
+- 문자열 캐시 조회
 
-    // Exists: 캐시 존재 여부
-    Exists(ctx context.Context, key string) (bool, error)
+**`Delete(ctx context.Context, key string) error`**
+- 캐시 삭제
 
-    // Increment: 카운터 증가
-    Increment(ctx context.Context, key string) (int64, error)
+**`Exists(ctx context.Context, key string) (bool, error)`**
+- 캐시 존재 여부
 
-    // Decrement: 카운터 감소
-    Decrement(ctx context.Context, key string) (int64, error)
+#### 카운터 연산
 
-    // SetNX: 존재하지 않을 때만 저장 (분산 락)
-    SetNX(ctx context.Context, key string, value interface{}, ttl time.Duration) (bool, error)
+**`Increment(ctx context.Context, key string) (int64, error)`**
+- 카운터 증가
 
-    // HSet: Hash 저장
-    HSet(ctx context.Context, key, field string, value interface{}) error
+**`Decrement(ctx context.Context, key string) (int64, error)`**
+- 카운터 감소
 
-    // HGet: Hash 조회
-    HGet(ctx context.Context, key, field string) (string, error)
+#### 분산 락
 
-    // HGetAll: Hash 전체 조회
-    HGetAll(ctx context.Context, key string) (map[string]string, error)
+**`SetNX(ctx context.Context, key string, value interface{}, ttl time.Duration) (bool, error)`**
+- 존재하지 않을 때만 저장 (분산 락 구현)
 
-    // Expire: TTL 설정
-    Expire(ctx context.Context, key string, ttl time.Duration) error
-}
-```
+#### Hash 연산
+
+**`HSet(ctx context.Context, key, field string, value interface{}) error`**
+- Hash 저장
+
+**`HGet(ctx context.Context, key, field string) (string, error)`**
+- Hash 조회
+
+**`HGetAll(ctx context.Context, key string) (map[string]string, error)`**
+- Hash 전체 조회
+
+**`Expire(ctx context.Context, key string, ttl time.Duration) error`**
+- TTL 설정
 
 ### 2.2 캐시 키 규칙
 
-```go
-const (
-    // Route 캐시
-    CacheKeyRoute = "abs:route:%s" // abs:route:{routeID}
-
-    // 일치율 캐시
-    CacheKeyMatchRate = "abs:matchrate:%s" // abs:matchrate:{routeID}
-
-    // 실험 캐시
-    CacheKeyExperiment = "abs:experiment:%s" // abs:experiment:{experimentID}
-
-    // 경고 캐시 (롤백 경고)
-    CacheKeyWarning = "abs:warning:%s:%s" // abs:warning:{stageID}:{warningType}
-
-    // 분산 락
-    CacheLockKey = "abs:lock:%s" // abs:lock:{resourceID}
-)
-```
+| 키 패턴 | 설명 | 예시 |
+|---------|------|------|
+| `abs:route:{routeID}` | Route 캐시 | `abs:route:uuid-1234` |
+| `abs:matchrate:{routeID}` | 일치율 캐시 | `abs:matchrate:uuid-1234` |
+| `abs:experiment:{experimentID}` | 실험 캐시 | `abs:experiment:uuid-5678` |
+| `abs:warning:{stageID}:{warningType}` | 경고 캐시 | `abs:warning:uuid-abcd:match_rate` |
+| `abs:lock:{resourceID}` | 분산 락 | `abs:lock:experiment:uuid-1234` |
 
 ### 2.3 TTL 정책
 
@@ -264,68 +250,65 @@ const (
 
 RabbitMQ 메시지 발행을 추상화한 인터페이스입니다.
 
-```go
-type MessagePublisherPort interface {
-    // Publish: 메시지 발행
-    Publish(ctx context.Context, exchange, routingKey string, message interface{}) error
+#### 인터페이스
 
-    // PublishWithRetry: 재시도를 포함한 메시지 발행
-    PublishWithRetry(ctx context.Context, exchange, routingKey string, message interface{}, maxRetries int) error
-}
-```
+**`Publish(ctx context.Context, exchange, routingKey string, message interface{}) error`**
+- 메시지 발행
 
-### 3.2 Exchange 및 Queue 정의
+**`PublishWithRetry(ctx context.Context, exchange, routingKey string, message interface{}, maxRetries int) error`**
+- 재시도를 포함한 메시지 발행
 
-```go
-const (
-    // Exchange
-    ExchangeComparison   = "abs.comparison"   // 비교 결과
-    ExchangeExperiment   = "abs.experiment"   // 실험 이벤트
-    ExchangeNotification = "abs.notification" // 알림
+### 3.2 Exchange 및 Routing Key
 
-    // Routing Key
-    RoutingKeyComparisonCompleted = "comparison.completed"
-    RoutingKeyComparisonFailed    = "comparison.failed"
-    RoutingKeyExperimentStarted   = "experiment.started"
-    RoutingKeyExperimentApproved  = "experiment.approved"
-    RoutingKeyExperimentCompleted = "experiment.completed"
-    RoutingKeyExperimentAborted   = "experiment.aborted"
-    RoutingKeyRollbackTriggered   = "experiment.rollback"
-    RoutingKeyNotificationAlert   = "notification.alert"
+| Exchange | Routing Key | 설명 |
+|----------|-------------|------|
+| `abs.comparison` | `comparison.completed` | 비교 완료 |
+| `abs.comparison` | `comparison.failed` | 비교 실패 |
+| `abs.experiment` | `experiment.started` | 실험 시작 |
+| `abs.experiment` | `experiment.approved` | 단계 승인 |
+| `abs.experiment` | `experiment.completed` | 실험 완료 |
+| `abs.experiment` | `experiment.aborted` | 실험 중단 |
+| `abs.experiment` | `experiment.rollback` | 롤백 발생 |
+| `abs.notification` | `notification.alert` | 알림 |
 
-    // Queue
-    QueueComparisonProcessor = "abs.comparison.processor"
-    QueueExperimentWorker    = "abs.experiment.worker"
-    QueueNotificationSender  = "abs.notification.sender"
-)
-```
+### 3.3 Queue
 
-### 3.3 메시지 포맷
+| Queue 이름 | 설명 |
+|-----------|------|
+| `abs.comparison.processor` | 비교 결과 처리 |
+| `abs.experiment.worker` | 실험 작업 처리 |
+| `abs.notification.sender` | 알림 발송 |
 
-```go
-type ComparisonMessage struct {
-    ComparisonID string                `json:"comparison_id"`
-    RouteID      string                `json:"route_id"`
-    IsMatch      bool                  `json:"is_match"`
-    Timestamp    time.Time             `json:"timestamp"`
-}
+### 3.4 메시지 포맷
 
-type ExperimentMessage struct {
-    ExperimentID string                `json:"experiment_id"`
-    RouteID      string                `json:"route_id"`
-    EventType    string                `json:"event_type"`
-    Payload      map[string]interface{} `json:"payload"`
-    Timestamp    time.Time             `json:"timestamp"`
-}
+#### ComparisonMessage
 
-type NotificationMessage struct {
-    Type      string                `json:"type"` // "slack" | "email"
-    Severity  string                `json:"severity"` // "info" | "warning" | "critical"
-    Subject   string                `json:"subject"`
-    Message   string                `json:"message"`
-    Timestamp time.Time             `json:"timestamp"`
-}
-```
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `comparison_id` | `string` | 비교 ID |
+| `route_id` | `string` | 라우트 ID |
+| `is_match` | `bool` | 일치 여부 |
+| `timestamp` | `time.Time` | 타임스탬프 |
+
+#### ExperimentMessage
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `experiment_id` | `string` | 실험 ID |
+| `route_id` | `string` | 라우트 ID |
+| `event_type` | `string` | 이벤트 타입 |
+| `payload` | `map[string]interface{}` | 페이로드 |
+| `timestamp` | `time.Time` | 타임스탬프 |
+
+#### NotificationMessage
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `type` | `string` | 타입 (slack/email) |
+| `severity` | `string` | 심각도 (info/warning/critical) |
+| `subject` | `string` | 제목 |
+| `message` | `string` | 메시지 본문 |
+| `timestamp` | `time.Time` | 타임스탬프 |
 
 ---
 
@@ -335,55 +318,61 @@ type NotificationMessage struct {
 
 Legacy/Modern API 호출을 추상화한 인터페이스입니다.
 
-```go
-type APIClientPort interface {
-    // Call: API 호출
-    Call(ctx context.Context, req APICallRequest) (*APICallResponse, error)
+#### 인터페이스
 
-    // CallWithRetry: 재시도를 포함한 API 호출
-    CallWithRetry(ctx context.Context, req APICallRequest, maxRetries int) (*APICallResponse, error)
-}
+**`Call(ctx context.Context, req APICallRequest) (*APICallResponse, error)`**
+- API 호출
 
-type APICallRequest struct {
-    Host        string
-    Port        int
-    Method      string
-    Path        string
-    QueryParams map[string]string
-    Headers     map[string]string
-    Body        []byte
-    Timeout     time.Duration
-}
+**`CallWithRetry(ctx context.Context, req APICallRequest, maxRetries int) (*APICallResponse, error)`**
+- 재시도를 포함한 API 호출
 
-type APICallResponse struct {
-    StatusCode   int
-    Headers      map[string]string
-    Body         []byte
-    ResponseTime int64 // ms
-    Error        string
-}
-```
+#### APICallRequest
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `Host` | `string` | 호스트 |
+| `Port` | `int` | 포트 |
+| `Method` | `string` | HTTP 메서드 |
+| `Path` | `string` | 경로 |
+| `QueryParams` | `map[string]string` | 쿼리 파라미터 |
+| `Headers` | `map[string]string` | 헤더 |
+| `Body` | `[]byte` | 요청 본문 |
+| `Timeout` | `time.Duration` | 타임아웃 |
+
+#### APICallResponse
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `StatusCode` | `int` | HTTP 상태 코드 |
+| `Headers` | `map[string]string` | 응답 헤더 |
+| `Body` | `[]byte` | 응답 본문 |
+| `ResponseTime` | `int64` | 응답 시간 (ms) |
+| `Error` | `string` | 에러 메시지 |
 
 ### 4.2 Timeout 정책
 
-| API 타입 | Timeout | 설명 |
-|----------|---------|------|
-| Legacy API | 30초 | Legacy API 호출 |
-| Modern API | 30초 | Modern API 호출 |
+| API 타입 | Timeout |
+|----------|---------|
+| Legacy API | 30초 |
+| Modern API | 30초 |
 
 ### 4.3 Retry 정책
 
-- **최대 재시도 횟수**: 3회
-- **Backoff 전략**: Exponential Backoff
-  - 1차 재시도: 1초 후
-  - 2차 재시도: 2초 후
-  - 3차 재시도: 4초 후
-- **재시도 대상**:
-  - 네트워크 오류
-  - 5xx 서버 에러
-  - 타임아웃
-- **재시도 제외**:
-  - 4xx 클라이언트 에러
+| 항목 | 값 |
+|------|-----|
+| **최대 재시도 횟수** | 3회 |
+| **Backoff 전략** | Exponential Backoff |
+| **1차 재시도** | 1초 후 |
+| **2차 재시도** | 2초 후 |
+| **3차 재시도** | 4초 후 |
+
+**재시도 대상**:
+- 네트워크 오류
+- 5xx 서버 에러
+- 타임아웃
+
+**재시도 제외**:
+- 4xx 클라이언트 에러
 
 ---
 
@@ -393,286 +382,161 @@ type APICallResponse struct {
 
 Slack/Email 알림을 추상화한 인터페이스입니다.
 
-```go
-type NotificationPort interface {
-    // SendSlack: Slack 알림 발송
-    SendSlack(ctx context.Context, notification SlackNotification) error
+#### 인터페이스
 
-    // SendEmail: Email 알림 발송
-    SendEmail(ctx context.Context, notification EmailNotification) error
-}
+**`SendSlack(ctx context.Context, notification SlackNotification) error`**
+- Slack 알림 발송
 
-type SlackNotification struct {
-    WebhookURL string
-    Channel    string
-    Username   string
-    IconEmoji  string
-    Text       string
-    Blocks     []SlackBlock
-}
+**`SendEmail(ctx context.Context, notification EmailNotification) error`**
+- Email 알림 발송
 
-type SlackBlock struct {
-    Type string                 `json:"type"`
-    Text map[string]string      `json:"text,omitempty"`
-    Fields []map[string]string  `json:"fields,omitempty"`
-}
+#### SlackNotification
 
-type EmailNotification struct {
-    From    string
-    To      []string
-    Cc      []string
-    Subject string
-    Body    string
-    IsHTML  bool
-}
-```
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `WebhookURL` | `string` | Webhook URL |
+| `Channel` | `string` | 채널 |
+| `Username` | `string` | 사용자명 |
+| `IconEmoji` | `string` | 아이콘 이모지 |
+| `Text` | `string` | 텍스트 |
+| `Blocks` | `[]SlackBlock` | 블록 (포맷팅) |
+
+#### EmailNotification
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `From` | `string` | 발신자 |
+| `To` | `[]string` | 수신자 목록 |
+| `Cc` | `[]string` | 참조 목록 |
+| `Subject` | `string` | 제목 |
+| `Body` | `string` | 본문 |
+| `IsHTML` | `bool` | HTML 여부 |
 
 ### 5.2 알림 템플릿
 
-#### 5.2.1 진행 조건 충족 알림
+#### 진행 조건 충족 알림 (ProgressReadyNotification)
 
-```go
-type ProgressReadyNotification struct {
-    RouteID          string
-    RoutePath        string
-    ExperimentID     string
-    CurrentStage     int
-    CurrentPercentage int
-    NextPercentage   int
-    MatchRate        float64
-    ErrorRate        float64
-    ApprovalLink     string
-}
-```
+| 필드 | 설명 |
+|------|------|
+| `RouteID` | 라우트 ID |
+| `RoutePath` | API 경로 (예: GET /api/v1/users) |
+| `ExperimentID` | 실험 ID |
+| `CurrentStage` | 현재 단계 |
+| `CurrentPercentage` | 현재 트래픽 비율 |
+| `NextPercentage` | 다음 트래픽 비율 |
+| `MatchRate` | 일치율 |
+| `ErrorRate` | 에러율 |
+| `ApprovalLink` | 승인 링크 |
 
-**Slack 메시지 예시**:
-```
-🚀 실험 진행 준비 완료
+**메시지 구성**:
+- 제목: "🚀 실험 진행 준비 완료"
+- 내용: API 경로, 실험 ID, 현재/다음 단계, 메트릭 (일치율, 에러율, 요청 수)
+- 액션: 승인 링크
 
-API: GET /api/v1/users
-실험 ID: exp-12345
-현재 단계: 1단계 (1%)
-다음 단계: 5%
+#### 롤백 발생 알림 (RollbackNotification)
 
-📊 메트릭
-- 일치율: 100.0%
-- 에러율: 0.0%
-- 요청 수: 150
+| 필드 | 설명 |
+|------|------|
+| `RouteID` | 라우트 ID |
+| `RoutePath` | API 경로 |
+| `ExperimentID` | 실험 ID |
+| `Stage` | 단계 번호 |
+| `Percentage` | 트래픽 비율 |
+| `Severity` | 심각도 (critical/warning) |
+| `Reason` | 롤백 사유 |
+| `Metrics` | 메트릭 맵 |
 
-✅ 승인하기: https://abs-dashboard/experiments/exp-12345/approve
-```
-
-#### 5.2.2 롤백 발생 알림
-
-```go
-type RollbackNotification struct {
-    RouteID      string
-    RoutePath    string
-    ExperimentID string
-    Stage        int
-    Percentage   int
-    Severity     string // "critical" | "warning"
-    Reason       string
-    Metrics      map[string]interface{}
-}
-```
-
-**Slack 메시지 예시**:
-```
-🚨 긴급: 자동 롤백 발생
-
-API: GET /api/v1/users
-실험 ID: exp-12345
-단계: 2단계 (5%)
-심각도: Critical
-
-⚠️ 롤백 사유
-Modern API 에러율 1.5% (임계값: 1.0%)
-
-📊 메트릭
-- 일치율: 99.8%
-- 에러율: 1.5%
-- 응답 시간: Legacy 120ms / Modern 250ms
-
-🔍 상세 보기: https://abs-dashboard/experiments/exp-12345
-```
+**메시지 구성**:
+- 제목: "🚨 긴급: 자동 롤백 발생" (Critical) 또는 "⚠️ 경고: 자동 롤백 발생" (Warning)
+- 내용: API 경로, 실험 ID, 단계, 심각도, 롤백 사유, 메트릭
+- 액션: 상세 보기 링크
 
 ---
 
-## 6. Port 구현 가이드
-
-### 6.1 Repository 구현 위치
-
-```
-internal/adapter/out/persistence/
-├── oracle_route_repository.go
-├── oracle_comparison_repository.go
-├── oracle_experiment_repository.go
-└── oracle_experiment_stage_repository.go
-```
-
-### 6.2 Cache 구현 위치
-
-```
-internal/adapter/out/cache/
-└── redis_cache_adapter.go
-```
-
-### 6.3 Message Publisher 구현 위치
-
-```
-internal/adapter/out/messaging/
-└── rabbitmq_publisher_adapter.go
-```
-
-### 6.4 API Client 구현 위치
-
-```
-internal/adapter/out/httpclient/
-├── api_client_adapter.go
-└── circuit_breaker.go
-```
-
-### 6.5 Notification 구현 위치
-
-```
-internal/adapter/out/notification/
-├── slack_notifier.go
-└── email_notifier.go
-```
-
----
-
-## 7. 에러 처리
-
-### 7.1 Repository 에러
-
-```go
-var (
-    ErrRouteNotFound           = errors.New("route not found")
-    ErrComparisonNotFound      = errors.New("comparison not found")
-    ErrExperimentNotFound      = errors.New("experiment not found")
-    ErrExperimentStageNotFound = errors.New("experiment stage not found")
-    ErrDuplicateRoute          = errors.New("duplicate route")
-    ErrDatabaseConnection      = errors.New("database connection error")
-)
-```
-
-### 7.2 Cache 에러
-
-```go
-var (
-    ErrCacheNotFound      = errors.New("cache not found")
-    ErrCacheConnection    = errors.New("cache connection error")
-    ErrCacheSerialization = errors.New("cache serialization error")
-)
-```
-
-### 7.3 API Client 에러
-
-```go
-var (
-    ErrAPICallTimeout     = errors.New("API call timeout")
-    ErrAPICallFailed      = errors.New("API call failed")
-    ErrInvalidResponse    = errors.New("invalid API response")
-    ErrCircuitBreakerOpen = errors.New("circuit breaker is open")
-)
-```
-
----
-
-## 8. 트랜잭션 처리
-
-### 8.1 UnitOfWork 패턴 (선택사항)
+## 6. UnitOfWork 패턴 (선택사항)
 
 복잡한 트랜잭션 처리가 필요한 경우 UnitOfWork 패턴을 사용할 수 있습니다.
 
-```go
-type UnitOfWork interface {
-    // Begin: 트랜잭션 시작
-    Begin(ctx context.Context) (context.Context, error)
+### 6.1 인터페이스
 
-    // Commit: 트랜잭션 커밋
-    Commit(ctx context.Context) error
+**`Begin(ctx context.Context) (context.Context, error)`**
+- 트랜잭션 시작
 
-    // Rollback: 트랜잭션 롤백
-    Rollback(ctx context.Context) error
+**`Commit(ctx context.Context) error`**
+- 트랜잭션 커밋
 
-    // RouteRepository: 트랜잭션 내 Repository 반환
-    RouteRepository() RouteRepository
-    ComparisonRepository() ComparisonRepository
-    ExperimentRepository() ExperimentRepository
-    ExperimentStageRepository() ExperimentStageRepository
-}
-```
+**`Rollback(ctx context.Context) error`**
+- 트랜잭션 롤백
 
-### 8.2 사용 예시
+**Repository 접근자**:
+- `RouteRepository() RouteRepository`
+- `ComparisonRepository() ComparisonRepository`
+- `ExperimentRepository() ExperimentRepository`
+- `ExperimentStageRepository() ExperimentStageRepository`
 
-```go
-func (u *ApproveExperimentUseCase) Execute(ctx context.Context, req ApproveRequest) error {
-    txCtx, err := u.uow.Begin(ctx)
-    if err != nil {
-        return err
-    }
+### 6.2 사용 시나리오
 
-    defer func() {
-        if err != nil {
-            u.uow.Rollback(txCtx)
-        }
-    }()
-
-    // 1. 실험 조회
-    experiment, err := u.uow.ExperimentRepository().FindByID(txCtx, req.ExperimentID)
-    if err != nil {
-        return err
-    }
-
-    // 2. 실험 승인
-    if err := experiment.Approve(req.ApprovedBy, nextPercentage); err != nil {
-        return err
-    }
-
-    // 3. 실험 수정
-    if err := u.uow.ExperimentRepository().Update(txCtx, experiment); err != nil {
-        return err
-    }
-
-    // 4. 현재 단계 완료
-    currentStage.Complete(req.ApprovedBy)
-    if err := u.uow.ExperimentStageRepository().Update(txCtx, currentStage); err != nil {
-        return err
-    }
-
-    // 5. 새로운 단계 생성
-    if err := u.uow.ExperimentStageRepository().Create(txCtx, newStage); err != nil {
-        return err
-    }
-
-    // 커밋
-    return u.uow.Commit(txCtx)
-}
-```
+- 실험 승인 시 Experiment, ExperimentStage, Route를 동시에 수정하는 경우
+- 원자성이 보장되어야 하는 복잡한 비즈니스 로직
 
 ---
 
-## 9. 참고 사항
+## 7. 에러 정의
 
-### 9.1 인터페이스 위치
+### 7.1 Repository 에러
 
-- **정의**: `internal/domain/port/` (도메인 계층)
-- **구현**: `internal/adapter/out/` (인프라 계층)
+- `ErrRouteNotFound`: 라우트를 찾을 수 없음
+- `ErrComparisonNotFound`: 비교 결과를 찾을 수 없음
+- `ErrExperimentNotFound`: 실험을 찾을 수 없음
+- `ErrExperimentStageNotFound`: 실험 단계를 찾을 수 없음
+- `ErrDuplicateRoute`: 중복된 라우트
+- `ErrDatabaseConnection`: 데이터베이스 연결 오류
 
-### 9.2 의존성 방향
+### 7.2 Cache 에러
+
+- `ErrCacheNotFound`: 캐시를 찾을 수 없음
+- `ErrCacheConnection`: 캐시 연결 오류
+- `ErrCacheSerialization`: 캐시 직렬화 오류
+
+### 7.3 API Client 에러
+
+- `ErrAPICallTimeout`: API 호출 타임아웃
+- `ErrAPICallFailed`: API 호출 실패
+- `ErrInvalidResponse`: 유효하지 않은 API 응답
+- `ErrCircuitBreakerOpen`: Circuit Breaker가 Open 상태
+
+---
+
+## 8. 구현 가이드
+
+### 8.1 Port 정의 위치
+
+```
+internal/domain/port/
+```
+
+### 8.2 Adapter 구현 위치
+
+```
+internal/adapter/out/
+├── persistence/    # Repository 구현
+├── cache/          # Cache 구현
+├── messaging/      # Message Publisher 구현
+├── httpclient/     # API Client 구현
+└── notification/   # Notification 구현
+```
+
+### 8.3 의존성 방향
 
 ```
 Domain Layer (Port 정의)
        ↑
        │ 의존
        │
-Infrastructure Layer (Port 구현)
+Infrastructure Layer (Adapter 구현)
 ```
 
-### 9.3 Mock 생성
+### 8.4 Mock 생성
 
 테스트를 위해 gomock을 사용하여 Mock 생성:
 
