@@ -16,18 +16,18 @@
 ### 01-architecture/ - 아키텍처 설계
 
 #### 문서 작성
-- [ ] `01-architecture-overview.md` 작성 완료
-  - [ ] 헥사고날 아키텍처 선택 이유 명시
-  - [ ] 계층별 의존성 다이어그램 포함
-- [ ] `02-project-structure.md` 작성 완료
-  - [ ] 전체 디렉토리 구조 정의
-  - [ ] 각 디렉토리의 역할 설명
-- [ ] `03-layer-design.md` 작성 완료
-  - [ ] Domain/Application/Adapter/Infrastructure 계층 책임 정의
-  - [ ] 계층 간 통신 규칙 명시
-- [ ] `04-dependency-injection.md` 작성 완료
-  - [ ] DI 컨테이너 선택 및 초기화 전략
-  - [ ] Wire 또는 수동 DI 방식 결정
+- [x] `01-architecture-overview.md` 작성 완료
+  - [x] 헥사고날 아키텍처 선택 이유 명시
+  - [x] 계층별 의존성 다이어그램 포함
+- [x] `02-project-structure.md` 작성 완료
+  - [x] 전체 디렉토리 구조 정의
+  - [x] 각 디렉토리의 역할 설명
+- [x] `03-layer-design.md` 작성 완료
+  - [x] Domain/Application/Adapter/Infrastructure 계층 책임 정의
+  - [x] 계층 간 통신 규칙 명시
+- [x] `04-dependency-injection.md` 작성 완료
+  - [x] DI 컨테이너 선택 및 초기화 전략
+  - [x] 수동 DI 방식 결정
 
 #### 리뷰
 - [ ] 아키텍처 설계 리뷰 완료
