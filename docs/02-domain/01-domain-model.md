@@ -410,38 +410,68 @@ API 응답 정보를 나타내는 Value Object입니다.
 
 ## 5. Entity 관계 다이어그램
 
-```
-┌──────────────┐
-│    Route     │
-│              │
-│ - ID         │
-│ - Path       │◄───────┐
-│ - Method     │        │
-│ - MatchRate  │        │
-└──────────────┘        │
-       ▲                │
-       │                │
-       │ RouteID        │ RouteID
-       │                │
-┌──────────────┐   ┌────────────────┐
-│  Comparison  │   │  Experiment    │
-│              │   │                │
-│ - RouteID    │   │ - RouteID      │
-│ - IsMatch    │   │ - Status       │◄───────┐
-│ - Legacy...  │   │ - Current%     │        │
-│ - Modern...  │   │                │        │
-└──────────────┘   └────────────────┘        │
-                          ▲                  │
-                          │ ExperimentID     │ ExperimentID
-                          │                  │
-                   ┌──────────────────┐      │
-                   │ ExperimentStage  │      │
-                   │                  │──────┘
-                   │ - Stage          │
-                   │ - Traffic%       │
-                   │ - MatchRate      │
-                   │ - ErrorRate      │
-                   └──────────────────┘
+```mermaid
+classDiagram
+    class Route {
+        +String ID
+        +String Path
+        +String Method
+        +int SampleSize
+        +OperationMode Mode
+        +float64 MatchRate
+        +int64 TotalRequests
+        +int64 MatchedRequests
+        +Validate() error
+        +UpdateMatchRate(bool)
+        +CanSwitchToModern() bool
+        +ShouldRollback() bool
+    }
+
+    class Comparison {
+        +String ID
+        +String RouteID
+        +APIRequest LegacyRequest
+        +APIResponse LegacyResponse
+        +APIRequest ModernRequest
+        +APIResponse ModernResponse
+        +bool IsMatch
+        +int TotalFields
+        +int MatchedFields
+        +CalculateFieldMatchRate()
+        +IsTimeout() bool
+    }
+
+    class Experiment {
+        +String ID
+        +String RouteID
+        +int CurrentPercentage
+        +ExperimentStatus Status
+        +int CurrentStage
+        +Validate() error
+        +Start() error
+        +Pause() error
+        +Resume() error
+        +Approve(string, int) error
+        +Abort(string) error
+    }
+
+    class ExperimentStage {
+        +String ID
+        +String ExperimentID
+        +int Stage
+        +int TrafficPercentage
+        +int TotalRequests
+        +float64 MatchRate
+        +float64 ErrorRate
+        +CanProceedToNextStage(int) bool
+        +ShouldRollback() bool, string
+        +Complete(string)
+        +Rollback(string)
+    }
+
+    Route "1" --> "0..*" Comparison : has
+    Route "1" --> "0..*" Experiment : has
+    Experiment "1" --> "1..*" ExperimentStage : has
 ```
 
 **관계 설명**:
