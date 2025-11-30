@@ -63,21 +63,25 @@
 ### 03-database/ - 데이터베이스 설계
 
 #### 문서 작성
-- [ ] `01-schema-design.md` 작성 완료
-  - [ ] routes 테이블 정의
-  - [ ] comparisons 테이블 정의
-  - [ ] experiments 테이블 정의
-  - [ ] experiment_stages 테이블 정의
-  - [ ] metrics 테이블 정의
-- [ ] `02-entity-relationship.md` 작성 완료
-  - [ ] ERD 다이어그램 작성
-  - [ ] 테이블 간 관계 명시
-- [ ] `03-index-strategy.md` 작성 완료
-  - [ ] 인덱스 전략 수립
-  - [ ] 파티셔닝 전략 (필요 시)
+- [x] `01-schema-design.md` 작성 완료
+  - [x] routes 테이블 정의
+  - [x] comparisons 테이블 정의
+  - [x] experiments 테이블 정의
+  - [x] experiment_stages 테이블 정의
+- [x] `02-entity-relationship.md` 작성 완료
+  - [x] ERD 다이어그램 작성 (Mermaid)
+  - [x] 테이블 간 관계 명시
+- [x] `03-index-strategy.md` 작성 완료
+  - [x] 인덱스 전략 수립
+  - [x] 파티셔닝 전략 (comparisons 테이블)
 
 #### 구현
-- [ ] DDL 스크립트 작성 완료
+- [x] DDL 스크립트 작성 완료
+  - [x] 01-create-tables.sql (테이블 생성)
+  - [x] 02-create-triggers.sql (트리거)
+  - [x] 03-create-indexes.sql (인덱스)
+  - [x] 04-sample-data.sql (샘플 데이터)
+  - [x] 05-maintenance.sql (유지보수 쿼리)
 - [ ] 개발 환경 DB 구축 완료
 
 #### 리뷰
