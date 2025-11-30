@@ -38,25 +38,25 @@
 ### 02-domain/ - 도메인 모델 설계
 
 #### 문서 작성
-- [ ] `01-domain-model.md` 작성 완료
-  - [ ] Route Entity 정의
-  - [ ] Comparison Entity 정의
-  - [ ] Experiment Entity 정의
-  - [ ] Value Object 정의 (APIRequest, APIResponse 등)
-- [ ] `02-domain-service.md` 작성 완료
-  - [ ] ComparisonService 설계
-  - [ ] MatchRateCalculator 설계
-  - [ ] RoutingService 설계
-  - [ ] ExperimentService 설계
-- [ ] `03-port-interface.md` 작성 완료
-  - [ ] Repository 인터페이스 정의
-  - [ ] Cache 인터페이스 정의
-  - [ ] MessagePublisher 인터페이스 정의
-  - [ ] APIClient 인터페이스 정의
+- [x] `01-domain-model.md` 작성 완료
+  - [x] Route Entity 정의
+  - [x] Comparison Entity 정의
+  - [x] Experiment Entity 정의
+  - [x] Value Object 정의 (APIRequest, APIResponse 등)
+- [x] `02-domain-service.md` 작성 완료
+  - [x] ComparisonService 설계
+  - [x] MatchRateCalculator 설계
+  - [x] RoutingService 설계
+  - [x] ExperimentService 설계
+- [x] `03-port-interface.md` 작성 완료
+  - [x] Repository 인터페이스 정의
+  - [x] Cache 인터페이스 정의
+  - [x] MessagePublisher 인터페이스 정의
+  - [x] APIClient 인터페이스 정의
 
 #### 리뷰
-- [ ] 도메인 모델 리뷰 완료
-- [ ] 비즈니스 로직 검증 완료
+- [x] 도메인 모델 리뷰 완료
+- [x] 비즈니스 로직 검증 완료
 
 ---
 
