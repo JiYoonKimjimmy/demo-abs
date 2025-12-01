@@ -161,21 +161,21 @@
 ### 06-integration/ - 외부 연동 설계
 
 #### 문서 작성
-- [ ] `01-legacy-modern-client.md` 작성 완료
-  - [ ] HTTP Client 설정 (Timeout, Connection Pool)
-  - [ ] Retry 전략
-  - [ ] 에러 처리
-- [ ] `02-redis-cache.md` 작성 완료
-  - [ ] 캐시 키 전략
-  - [ ] TTL 정책
-  - [ ] Eviction 정책
-- [ ] `03-rabbitmq-messaging.md` 작성 완료
-  - [ ] Exchange/Queue 설계
-  - [ ] Message 포맷
-  - [ ] Dead Letter Queue 처리
-- [ ] `04-circuit-breaker.md` 작성 완료
-  - [ ] Circuit Breaker 설정값
-  - [ ] Fallback 전략
+- [x] `01-legacy-modern-client.md` 작성 완료
+  - [x] HTTP Client 설정 (Timeout, Connection Pool)
+  - [x] Retry 전략
+  - [x] 에러 처리
+- [x] `02-redis-cache.md` 작성 완료
+  - [x] 캐시 키 전략
+  - [x] TTL 정책
+  - [x] Eviction 정책
+- [x] `03-rabbitmq-messaging.md` 작성 완료
+  - [x] Exchange/Queue 설계
+  - [x] Message 포맷
+  - [x] Dead Letter Queue 처리
+- [x] `04-circuit-breaker.md` 작성 완료
+  - [x] Circuit Breaker 설정값
+  - [x] Fallback 전략
 
 #### 구현
 - [ ] HTTP Client 구현 (`internal/adapter/out/httpclient/`)
@@ -190,7 +190,7 @@
 - [ ] Circuit Breaker 단위 테스트
 
 #### 리뷰
-- [ ] 외부 연동 설계 리뷰 완료
+- [x] 외부 연동 설계 리뷰 완료
 
 ---
 
