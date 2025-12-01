@@ -128,19 +128,19 @@
 ### 05-api/ - API 설계
 
 #### 문서 작성
-- [ ] `01-rest-api-design.md` 작성 완료
-  - [ ] REST API 설계 원칙 정의
-  - [ ] 버전 관리 전략
-  - [ ] CORS 정책
-- [ ] `02-endpoint-specification.md` 작성 완료
-  - [ ] 관리 API 명세 (`/abs/api/v1/*`)
-  - [ ] 모니터링 API 명세
-  - [ ] Health Check API 명세
-  - [ ] 각 엔드포인트별 Request/Response DTO
-- [ ] `03-error-response.md` 작성 완료
-  - [ ] 에러 코드 체계 정의
-  - [ ] 에러 응답 포맷
-  - [ ] HTTP 상태 코드 매핑
+- [x] `01-rest-api-design.md` 작성 완료
+  - [x] REST API 설계 원칙 정의
+  - [x] 버전 관리 전략
+  - [x] CORS 정책
+- [x] `02-endpoint-specification.md` 작성 완료
+  - [x] 관리 API 명세 (`/abs/api/v1/*`)
+  - [x] 모니터링 API 명세
+  - [x] Health Check API 명세
+  - [x] 각 엔드포인트별 Request/Response DTO
+- [x] `03-error-response.md` 작성 완료
+  - [x] 에러 코드 체계 정의
+  - [x] 에러 응답 포맷
+  - [x] HTTP 상태 코드 매핑
 
 #### 구현
 - [ ] DTO 구조체 구현 (`internal/application/dto/`)
@@ -153,8 +153,8 @@
 - [ ] Postman/Swagger 테스트 컬렉션 작성
 
 #### 리뷰
-- [ ] API 설계 리뷰 완료
-- [ ] API 명세 승인 완료
+- [x] API 설계 리뷰 완료
+- [x] API 명세 승인 완료
 
 ---
 
