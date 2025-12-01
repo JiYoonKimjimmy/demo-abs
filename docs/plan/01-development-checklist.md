@@ -280,18 +280,18 @@
 ### 08-monitoring/ - 모니터링 설계
 
 #### 문서 작성
-- [ ] `01-metrics-design.md` 작성 완료
-  - [ ] Prometheus 메트릭 정의
-  - [ ] 메트릭 수집 주기
-  - [ ] Grafana 대시보드 설계
-- [ ] `02-logging-strategy.md` 작성 완료
-  - [ ] 로그 레벨 정책
-  - [ ] 구조화 로그 포맷
-  - [ ] 로그 수집 및 저장 전략
-- [ ] `03-alert-policy.md` 작성 완료
-  - [ ] 알림 임계값 정의
-  - [ ] Slack/Email 알림 템플릿
-  - [ ] 알림 에스컬레이션 정책
+- [x] `01-metrics-design.md` 작성 완료
+  - [x] Prometheus 메트릭 정의
+  - [x] 메트릭 수집 주기
+  - [x] Grafana 대시보드 설계
+- [x] `02-logging-strategy.md` 작성 완료
+  - [x] 로그 레벨 정책
+  - [x] 구조화 로그 포맷
+  - [x] 로그 수집 및 저장 전략
+- [x] `03-alert-policy.md` 작성 완료
+  - [x] 알림 임계값 정의
+  - [x] Slack/Email 알림 템플릿
+  - [x] 알림 에스컬레이션 정책
 
 #### 구현
 - [ ] Prometheus 메트릭 수집 구현 (`internal/infrastructure/monitoring/`)
@@ -305,7 +305,7 @@
 - [ ] 알림 발송 테스트
 
 #### 리뷰
-- [ ] 모니터링 설계 리뷰 완료
+- [x] 모니터링 설계 리뷰 완료
 
 ---
 
