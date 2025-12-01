@@ -312,18 +312,18 @@
 ### 09-deployment/ - 배포/운영 설계
 
 #### 문서 작성
-- [ ] `01-deployment-strategy.md` 작성 완료
-  - [ ] Rolling Update 절차
-  - [ ] Rollback 절차
-  - [ ] Blue-Green 배포 (선택사항)
-- [ ] `02-configuration.md` 작성 완료
-  - [ ] 환경별 설정 관리 (dev/stg/prod)
-  - [ ] 환경변수 목록
-  - [ ] Secret 관리 전략
-- [ ] `03-health-check.md` 작성 완료
-  - [ ] Liveness Probe 구현
-  - [ ] Readiness Probe 구현
-  - [ ] Startup Probe (선택사항)
+- [x] `01-deployment-strategy.md` 작성 완료
+  - [x] Rolling Update 절차
+  - [x] Rollback 절차
+  - [x] Blue-Green 배포 (선택사항)
+- [x] `02-configuration.md` 작성 완료
+  - [x] 환경별 설정 관리 (dev/stg/prod)
+  - [x] 환경변수 목록
+  - [x] Secret 관리 전략
+- [x] `03-health-check.md` 작성 완료
+  - [x] Liveness Probe 구현
+  - [x] Readiness Probe 구현
+  - [x] Startup Probe (선택사항)
 
 #### 구현
 - [ ] Health Check API 구현
@@ -340,7 +340,7 @@
 - [ ] 스테이징 환경 배포 테스트
 
 #### 리뷰
-- [ ] 배포 전략 리뷰 완료
+- [x] 배포 전략 리뷰 완료
 - [ ] DevOps팀 검수 완료
 
 ---
