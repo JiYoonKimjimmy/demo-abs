@@ -11,6 +11,59 @@
 
 ---
 
+## Phase 0: 요구사항 정의 (Week 0)
+
+### requirements/ - 요구사항 정의서
+
+#### 문서 작성
+- [x] `01-overview.md` 작성 완료
+  - [x] 서비스 개요 및 배경
+  - [x] 비즈니스 가치
+  - [x] 프로젝트 범위 및 목표
+  - [x] 주요 이해관계자
+  - [x] 인프라 아키텍처 다이어그램
+- [x] `02-functional-requirements.md` 작성 완료
+  - [x] FR-001: 포트 기반 라우팅
+  - [x] FR-002: JSON 비교 로직
+  - [x] FR-003: 일치율 계산 및 관리
+  - [x] FR-004: 반자동 전환 실험 관리
+  - [x] FR-005: 관리 API
+  - [x] FR-006: 프록시 기능
+- [x] `03-non-functional-requirements.md` 작성 완료
+  - [x] NFR-001: 성능 요구사항
+  - [x] NFR-002: 가용성 요구사항
+  - [x] NFR-003: 확장성 요구사항
+  - [x] NFR-004: 보안 요구사항
+  - [x] NFR-005: 운영성 요구사항
+  - [x] NFR-006: 유지보수성 요구사항
+- [x] `04-api-specification.md` 작성 완료
+  - [x] 라우트 관리 API (5개)
+  - [x] 실험 관리 API (6개)
+  - [x] 비교 결과 조회 API (2개)
+  - [x] 메트릭 조회 API (2개)
+  - [x] 알림 설정 API (4개)
+  - [x] Health Check API (3개)
+  - [x] 에러 코드 체계
+- [x] `05-data-requirements.md` 작성 완료
+  - [x] 데이터 모델 ERD
+  - [x] 주요 엔티티 정의 (4개)
+  - [x] 데이터 흐름
+  - [x] 데이터 보관 정책
+  - [x] GDPR 준수 요구사항
+- [x] `06-constraints-and-assumptions.md` 작성 완료
+  - [x] 기술 스택 제약
+  - [x] 환경 제약
+  - [x] 네트워크 제약
+  - [x] 가정사항
+  - [x] 알려진 제한사항
+  - [x] 향후 확장 계획
+
+#### 리뷰
+- [x] 요구사항 정의서 리뷰 완료
+- [x] 이해관계자 승인 완료
+
+---
+
 ## Phase 1: 설계 단계 (Week 1-3)
 
 ### 01-architecture/ - 아키텍처 설계
